@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Insertion Sort Function
+insertion_sort() {
+    arr=("$@")
+    n=${#arr[@]}
+    for ((i = 1; i < n; i++)); do
+        key=${arr[i]}
+        j=$((i-1))
+        while [ $j -ge 0 ] && [ ${arr[j]} -gt $key ]; do
+            arr[j+1]=${arr[j]}
+            j=$((j-1))
+        done
+        arr[j+1]=$key
+    done
+    echo "${arr[@]}"
+}
+
+# Example usage
+array=(5 3 8 1 2)
+sorted_array=($(insertion_sort "${array[@]}"))
+echo "Insertion Sorted array: ${sorted_array[@]}"
+
+
+
