@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Function to check if a string is a palindrome
+is_palindrome() {
+  str=$1
+  reversed_str=$(echo $str | rev)
+  
+  if [ "$str" == "$reversed_str" ]; then
+    echo "The string '$str' is a palindrome."
+  else
+    echo "The string '$str' is not a palindrome."
+  fi
+}
+echo "Enter a string:"
+read input_string
+
+is_palindrome "$input_string"
