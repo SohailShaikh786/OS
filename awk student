@@ -1,0 +1,41 @@
+BEGIN {
+    print "Student Report"
+    print "Name\t\tAverage\t\tGrade"
+    print "\t\t\t"
+}
+
+{
+    avg = ($3 + $4 + $5 + $6 + $7) / 5
+    print $2 "\t\t" avg
+    grade = ""
+
+    if (avg < 40)
+        grade = "F"
+    else if (avg > 40 && avg <= 45)
+        grade = "P"
+    else if (avg > 45 && avg <= 50)
+        grade = "C"
+    else if (avg > 50 && avg <= 55)
+        grade = "B"
+    else if (avg > 55 && avg <= 60)
+        grade = "B+"
+    else if (avg > 60 && avg <= 70)
+        grade = "A"
+    else if (avg > 70 && avg <= 80)
+        grade = "A+"
+    else if (avg > 80 && avg <= 100)
+        grade = "O"
+
+    print "\t\t\t" grade
+}
+
+END {
+    print ""
+    print "End of report"
+} 
+
+1 A    50   30   40   90   20   
+2 B   30   70   70   60   70   
+3 C   20   90   50   40   40   
+4 D    10   40   10   30   50   5   
+5 E	   40   50   30   90   10   
