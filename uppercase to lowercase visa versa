@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Function to convert string to lowercase
+to_lowercase() {
+  echo "Lowercase: $(echo $1 | tr '[:upper:]' '[:lower:]')"
+}
+
+# Function to convert string to uppercase
+to_uppercase() {
+  echo "Uppercase: $(echo $1 | tr '[:lower:]' '[:upper:]')"
+}
+
+# Main script execution
+echo "Enter a string:"
+read input_string
+
+echo "Choose the operation:"
+echo "1. Convert to Lowercase"
+echo "2. Convert to Uppercase"
+
+read choice
+
+case $choice in
+  1) to_lowercase "$input_string" ;;
+  2) to_uppercase "$input_string" ;;
+  *) echo "Invalid choice." ;;
+esac
