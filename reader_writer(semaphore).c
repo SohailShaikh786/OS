@@ -4,23 +4,28 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-// Maximum number of operations for readers and writers
-#define MAX_OPERATIONS 20
+// Constants
+#define MAX_OPERATIONS 20 // Total read/write operations
 
+// Semaphores and shared data
 sem_t rw_mutex;      // Semaphore to ensure mutual exclusion for writers
-sem_t mutex;         // Semaphore to protect the read_count variable
-int read_count = 0;  // Number of readers currently accessing the shared resource
+sem_t mutex;         // Semaphore to protect read_count
+int read_count = 0;  // Number of readers currently accessing the resource
+int shared_data = 0; // Shared resource
+int total_operations = 0; // Tracks the total number of operations
 
-// Shared resource
-int shared_data = 0;
-int total_operations = 0; // Tracks total read/write operations
+// Function prototypes
+void* writer(void* arg);
+void* reader(void* arg);
+
 pthread_mutex_t op_mutex = PTHREAD_MUTEX_INITIALIZER; // Protects total_operations
 
 // Writer function
 void* writer(void* arg) {
-    int writer_id = ((int)arg);
+    int writer_id = *(int*)arg; // Get writer ID
 
     while (1) {
+        // Check if the maximum number of operations has been reached
         pthread_mutex_lock(&op_mutex);
         if (total_operations >= MAX_OPERATIONS) {
             pthread_mutex_unlock(&op_mutex);
@@ -29,14 +34,18 @@ void* writer(void* arg) {
         total_operations++;
         pthread_mutex_unlock(&op_mutex);
 
-        sem_wait(&rw_mutex); // Lock the resource for writing
+        // Writer locks the resource for writing
+        sem_wait(&rw_mutex);
 
-        // Writing to the shared resource
+        // Write to the shared resource
         shared_data += 1;
         printf("Writer %d wrote: %d\n", writer_id, shared_data);
 
-        sem_post(&rw_mutex); // Release the resource
-        sleep(rand() % 2 + 1); // Simulate writing time
+        // Release the resource
+        sem_post(&rw_mutex);
+
+        // Simulate writing time
+        sleep(rand() % 2 + 1);
     }
 
     return NULL;
@@ -44,9 +53,10 @@ void* writer(void* arg) {
 
 // Reader function
 void* reader(void* arg) {
-    int reader_id = ((int)arg);
+    int reader_id = *(int*)arg; // Get reader ID
 
     while (1) {
+        // Check if the maximum number of operations has been reached
         pthread_mutex_lock(&op_mutex);
         if (total_operations >= MAX_OPERATIONS) {
             pthread_mutex_unlock(&op_mutex);
@@ -55,24 +65,27 @@ void* reader(void* arg) {
         total_operations++;
         pthread_mutex_unlock(&op_mutex);
 
-        sem_wait(&mutex); // Lock to update read_count
+        // Entry Section: Update the reader count
+        sem_wait(&mutex);
         read_count++;
         if (read_count == 1) {
             sem_wait(&rw_mutex); // First reader locks the resource
         }
-        sem_post(&mutex); // Release the lock on read_count
+        sem_post(&mutex);
 
-        // Reading the shared resource
+        // Read from the shared resource
         printf("Reader %d read: %d\n", reader_id, shared_data);
 
-        sem_wait(&mutex); // Lock to update read_count
+        // Exit Section: Update the reader count
+        sem_wait(&mutex);
         read_count--;
         if (read_count == 0) {
             sem_post(&rw_mutex); // Last reader releases the resource
         }
-        sem_post(&mutex); // Release the lock on read_count
+        sem_post(&mutex);
 
-        sleep(rand() % 2 + 1); // Simulate reading time
+        // Simulate reading time
+        sleep(rand() % 2 + 1);
     }
 
     return NULL;
@@ -80,13 +93,13 @@ void* reader(void* arg) {
 
 // Main function
 int main() {
-    pthread_t readers[3], writers[2]; // Array of reader and writer threads
+    pthread_t readers[3], writers[2]; // Arrays for reader and writer threads
     int reader_ids[3] = {1, 2, 3};   // Reader IDs
     int writer_ids[2] = {1, 2};      // Writer IDs
 
     // Initialize semaphores
-    sem_init(&rw_mutex, 0, 1); // Binary semaphore for rw_mutex
-    sem_init(&mutex, 0, 1);    // Binary semaphore for mutex
+    sem_init(&rw_mutex, 0, 1); // Binary semaphore for writers
+    sem_init(&mutex, 0, 1);    // Binary semaphore for reader count
 
     // Create writer threads
     for (int i = 0; i < 2; i++) {
@@ -98,15 +111,17 @@ int main() {
         pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
     }
 
-    // Join threads
+    // Join writer threads
     for (int i = 0; i < 2; i++) {
         pthread_join(writers[i], NULL);
     }
+
+    // Join reader threads
     for (int i = 0; i < 3; i++) {
         pthread_join(readers[i], NULL);
     }
 
-    // Destroy semaphores (cleanup)
+    // Destroy semaphores
     sem_destroy(&rw_mutex);
     sem_destroy(&mutex);
 
