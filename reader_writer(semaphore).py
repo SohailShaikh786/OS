@@ -53,7 +53,7 @@ def writer(writer_id):
         time.sleep(random.uniform(1, 3))
 
 # Main function
-if _name_ == "_main_":
+if __name__ == "__main__":
     readers = [threading.Thread(target=reader, args=(i,)) for i in range(3)]
     writers = [threading.Thread(target=writer, args=(i,)) for i in range(1)]
 
