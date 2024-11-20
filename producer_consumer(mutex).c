@@ -18,7 +18,7 @@ pthread_cond_t buffer_not_empty = PTHREAD_COND_INITIALIZER; // Buffer not empty 
 
 // Producer function
 void* producer(void* arg) {
-    int producer_id = ((int)arg);
+    int producer_id = *(int*)arg; // Correctly cast and dereference the argument
 
     while (1) {
         pthread_mutex_lock(&mutex);
@@ -53,7 +53,7 @@ void* producer(void* arg) {
 
 // Consumer function
 void* consumer(void* arg) {
-    int consumer_id = ((int)arg);
+    int consumer_id = *(int*)arg; // Correctly cast and dereference the argument
 
     while (1) {
         pthread_mutex_lock(&mutex);
