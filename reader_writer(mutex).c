@@ -1,4 +1,3 @@
-
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +14,7 @@ int operation_count = 20; // Total operations to perform (read + write)
 
 // Writer function
 void* writer(void* arg) {
-    int writer_id = ((int)arg);
+    int writer_id = *(int*)arg; // Correctly dereference the argument
 
     while (1) {
         pthread_mutex_lock(&op_count_mutex);
@@ -41,7 +40,7 @@ void* writer(void* arg) {
 
 // Reader function
 void* reader(void* arg) {
-    int reader_id = ((int)arg);
+    int reader_id = *(int*)arg; // Correctly dereference the argument
 
     while (1) {
         pthread_mutex_lock(&op_count_mutex);
@@ -80,25 +79,38 @@ void* reader(void* arg) {
 // Main function
 int main() {
     pthread_t readers[3], writers[2]; // Arrays for reader and writer threads
-    int reader_ids[3] = {1, 2, 3};   // Reader IDs
-    int writer_ids[2] = {1, 2};      // Writer IDs
+
+    // Dynamically allocate IDs to avoid race conditions
+    int* reader_ids[3];
+    int* writer_ids[2];
+
+    for (int i = 0; i < 3; i++) {
+        reader_ids[i] = malloc(sizeof(int));
+        *reader_ids[i] = i + 1;
+    }
+    for (int i = 0; i < 2; i++) {
+        writer_ids[i] = malloc(sizeof(int));
+        *writer_ids[i] = i + 1;
+    }
 
     // Create writer threads
     for (int i = 0; i < 2; i++) {
-        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+        pthread_create(&writers[i], NULL, writer, writer_ids[i]);
     }
 
     // Create reader threads
     for (int i = 0; i < 3; i++) {
-        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+        pthread_create(&readers[i], NULL, reader, reader_ids[i]);
     }
 
     // Join threads
     for (int i = 0; i < 2; i++) {
         pthread_join(writers[i], NULL);
+        free(writer_ids[i]); // Free allocated memory
     }
     for (int i = 0; i < 3; i++) {
         pthread_join(readers[i], NULL);
+        free(reader_ids[i]); // Free allocated memory
     }
 
     return 0;
